@@ -7,12 +7,12 @@
   <meta name="theme-color" content="#0e0f11" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Zeni" />
+  <meta name="apple-mobile-web-app-title" content="Midas" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/icons/icon-180.png" />
   <link rel="stylesheet" href="/styles.css" />
-  <title>Zeni</title>
+  <title>Midas</title>
 </head>
 <body>
   <button id="settingsBtn" class="corner corner-tl" type="button" data-i18n-label="settings">
@@ -50,11 +50,6 @@
     <form id="settingsForm" class="form" novalidate>
       <label><span data-i18n="name"></span><input name="name" autocomplete="name" maxlength="80" required /></label>
       <label><span data-i18n="email"></span><input name="email" type="email" autocomplete="email" inputmode="email" maxlength="160" /></label>
-      <fieldset class="segmented">
-        <legend data-i18n="voice"></legend>
-        <label><input type="radio" name="voice" value="female" /><span data-i18n="female"></span></label>
-        <label><input type="radio" name="voice" value="male" /><span data-i18n="male"></span></label>
-      </fieldset>
       <label><span data-i18n="currency"></span><select name="currency"></select></label>
       <label><span data-i18n="language"></span><select name="language"></select></label>
       <button class="btn primary" type="submit" data-i18n="save"></button>

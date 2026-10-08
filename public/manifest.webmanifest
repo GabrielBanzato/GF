@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Zeni — Controle financeiro por voz",
-  "short_name": "Zeni",
-  "description": "Fale quem te deve, quanto e até quando. A Zeni anota, cobra os vencimentos e mantém sua planilha sempre atualizada, até offline.",
+  "name": "Midas — Controle financeiro por voz",
+  "short_name": "Midas",
+  "description": "Fale quem te deve, quanto e até quando. O Midas anota, cobra os vencimentos e mantém sua planilha sempre atualizada, até offline.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/",
@@ -19,7 +19,7 @@
     { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "screenshots": [
-    { "src": "/icons/screenshot-home.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Um botão para falar com a Zeni" },
+    { "src": "/icons/screenshot-home.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Um botão para falar com o Midas" },
     { "src": "/icons/screenshot-ledger.png", "sizes": "780x1688", "type": "image/png", "form_factor": "narrow", "label": "Controle financeiro offline" }
   ]
 }

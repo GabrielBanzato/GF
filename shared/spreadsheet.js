@@ -87,7 +87,7 @@ function addTitle(ws, text, subtitle, width) {
  * @param opts { ops, profile: {name, currency, language}, today, assistantName }
  * @returns Promise<ArrayBuffer|Buffer>
  */
-export async function buildWorkbook(ExcelJS, { ops, profile = {}, today, assistantName = 'Zeni' }) {
+export async function buildWorkbook(ExcelJS, { ops, profile = {}, today, assistantName = 'Midas' }) {
   const L = labelsFor(profile.language === 'auto' ? 'pt' : profile.language);
   const currency = profile.currency || 'BRL';
   const fmt = moneyFormat(currency);

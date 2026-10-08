@@ -1,14 +1,14 @@
-# Zeni — gestor financeiro por voz
+# Midas — gestor financeiro por voz
 
-Uma tela, um botão. Você fala, a Zeni anota quem te deve, quem você deve, quanto e até quando.
+Uma tela, um botão. Você fala, o Midas anota quem te deve, quem você deve, quanto e até quando.
 
-> "Fala Zeni, coloca o João na lista, ele me deve 200 reais e tenho que receber até dia 15."
+> "Fala Midas, coloca o João na lista, ele me deve 200 reais e tenho que receber até dia 15."
 > "Opa, desconta 50 da conta do João, ele me pagou ontem, esqueci de avisar."
 > "Quanto a Ana ainda me deve?"
 
 - **Tela:** botão grande no centro pra falar com a IA, ⚙️ configurações no canto superior esquerdo e ✏️ (lápis com wifi cortado) no canto inferior direito.
 - **Login:** e-mail + senha, várias sessões (um por aparelho) e "esqueci minha senha" com código de 6 dígitos por e-mail.
-- **Configurações:** nome, e-mail, voz masculina/feminina, moeda, idioma (ou automático), alterar senha, sair e, separado e em destaque, **Deletar conta** (só funciona digitando `DELETAR`).
+- **Configurações:** nome, e-mail, moeda, idioma (ou automático), alterar senha, sair e, separado e em destaque, **Deletar conta** (só funciona digitando `DELETAR`).
 - **Lápis:** controle financeiro que funciona **offline**: ver saldos, lançar/remover registros e baixar a planilha `.xlsx`.
 
 ## Deploy (stack Docker + Cloudflare)
@@ -18,19 +18,19 @@ Uma tela, um botão. Você fala, a Zeni anota quem te deve, quem você deve, qua
    | Variável | Pra quê |
    |---|---|
    | `QWEN_API_KEY` | Chave do Alibaba Cloud Model Studio (DashScope). Sem ela a voz fica desligada, o resto funciona. |
-   | `RESEND_API_KEY` / `EMAIL_FROM` | Envio do código de recuperação de senha. Sem ela, o código aparece no log do container (`docker logs zeni`). |
-   | `ZENI_PORT` | Porta no host (padrão `3000`). |
+   | `RESEND_API_KEY` / `EMAIL_FROM` | Envio do código de recuperação de senha. Sem ela, o código aparece no log do container (`docker logs midas`). |
+   | `MIDAS_PORT` | Porta no host (padrão `3000`). |
    As outras variáveis do `docker-compose.yml` já têm valor padrão.
-3. **Cloudflare Zero Trust → Tunnels → Public Hostname** apontando para `http://<ip-do-servidor>:3000` (ou `http://zeni:3000` se o `cloudflared` estiver na mesma rede Docker; tem um serviço pronto comentado no compose).
+3. **Cloudflare Zero Trust → Tunnels → Public Hostname** apontando para `http://<ip-do-servidor>:3000` (ou `http://midas:3000` se o `cloudflared` estiver na mesma rede Docker; tem um serviço pronto comentado no compose).
 4. Abra `https://seu-dominio` no celular. **HTTPS é obrigatório**: sem ele o microfone e o service worker não funcionam.
 
-Os dados (SQLite + planilhas) ficam no volume `zeni-data`. Faça backup dele.
+Os dados (SQLite + planilhas) ficam no volume `midas-data`. Faça backup dele.
 
 ## Virando app iOS (PWABuilder)
 
 1. Com o site no ar, acesse [pwabuilder.com](https://www.pwabuilder.com) e informe a URL. O manifest, ícones, screenshots e service worker já estão prontos.
 2. **Package for stores → iOS**. Ele gera um projeto Xcode que abre o seu site dentro do app.
-3. No Xcode, em `Info.plist`, adicione `NSMicrophoneUsageDescription` (ex.: "A Zeni usa o microfone para ouvir seus comandos de voz.").
+3. No Xcode, em `Info.plist`, adicione `NSMicrophoneUsageDescription` (ex.: "O Midas usa o microfone para ouvir seus comandos de voz.").
 4. Assine com sua conta Apple Developer e envie pelo Xcode/TestFlight.
 
 No app iOS (WebView) o reconhecimento de voz do navegador não existe. Por isso mantenha `QWEN_ASR_MODEL` configurado. O backup `.xlsx` fica guardado no app e é exportado pelo botão "Baixar planilha", que abre a folha de compartilhamento (Salvar em Arquivos, AirDrop, etc.).
@@ -52,11 +52,11 @@ npm test
 |---|---|---|
 | Entender comandos (function calling) | `qwen-plus` | obrigatório |
 | Ouvir (voz → texto, detecta o idioma sozinho) | `qwen3-asr-flash` | usa o reconhecimento do navegador (não existe no app iOS) |
-| Falar (texto → voz) | `qwen3-tts-flash`: `Cherry` (feminina) / `Ethan` (masculina) | usa a voz do próprio aparelho |
+| Falar (texto → voz) | `qwen3-tts-flash` com a voz masculina `Ethan` | usa a voz do próprio aparelho |
 
 Para rodar o Qwen no seu próprio servidor, aponte `QWEN_BASE_URL` para qualquer endpoint compatível com OpenAI (Ollama, vLLM), ex.: `http://ollama:11434/v1` com `QWEN_CHAT_MODEL=qwen3`.
 
-A Zeni responde no idioma em que você falou. Se o idioma estiver fixo nas configurações, ela responde sempre nele.
+O Midas responde no idioma em que você falou. Se o idioma estiver fixo nas configurações, ele responde sempre nele. A voz é sempre masculina (troque o timbre com `QWEN_VOICE`).
 
 ## Login e segurança
 

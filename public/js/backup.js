@@ -1,7 +1,7 @@
 // Backup local da planilha: a cada alteração o .xlsx é regerado no próprio
 // aparelho e SOBRESCREVE o anterior (um único arquivo, sempre o mais recente).
 //  - No navegador/PWA: guardado no IndexedDB.
-//  - No app iOS (Capacitor): também gravado em Documentos/Zeni/controle-financeiro.xlsx,
+//  - No app iOS (Capacitor): também gravado em Documentos/Midas/controle-financeiro.xlsx,
 //    visível no app Arquivos do iPhone.
 
 import { buildWorkbook } from '/shared/spreadsheet.js';
@@ -41,7 +41,7 @@ export async function saveBackup({ ops, profile, assistantName }) {
 
   const fs = window.Capacitor?.Plugins?.Filesystem;
   if (fs) {
-    await fs.writeFile({ path: `Zeni/${BACKUP_FILENAME}`, data: toBase64(buf), directory: 'DOCUMENTS', recursive: true });
+    await fs.writeFile({ path: `Midas/${BACKUP_FILENAME}`, data: toBase64(buf), directory: 'DOCUMENTS', recursive: true });
   }
   return at;
 }

@@ -13,7 +13,7 @@ export function openDb(file) {
       email          TEXT NOT NULL UNIQUE,
       password_hash  TEXT NOT NULL,
       name           TEXT NOT NULL DEFAULT '',
-      voice          TEXT NOT NULL DEFAULT 'female',
+      voice          TEXT NOT NULL DEFAULT 'male',  -- legado: o Midas só tem voz masculina
       currency       TEXT NOT NULL DEFAULT 'BRL',
       language       TEXT NOT NULL DEFAULT 'auto',
       created_at     TEXT NOT NULL,
@@ -50,11 +50,11 @@ export function openDb(file) {
   `);
 
   const q = {
-    insertUser: db.prepare(`INSERT INTO users (id, email, password_hash, name, voice, currency, language, created_at, updated_at)
-                            VALUES (:id, :email, :password_hash, :name, :voice, :currency, :language, :now, :now)`),
+    insertUser: db.prepare(`INSERT INTO users (id, email, password_hash, name, currency, language, created_at, updated_at)
+                            VALUES (:id, :email, :password_hash, :name, :currency, :language, :now, :now)`),
     userById: db.prepare('SELECT * FROM users WHERE id = ?'),
     userByEmail: db.prepare('SELECT * FROM users WHERE email = ?'),
-    updateUser: db.prepare(`UPDATE users SET name = :name, email = :email, voice = :voice, currency = :currency,
+    updateUser: db.prepare(`UPDATE users SET name = :name, email = :email, currency = :currency,
                             language = :language, updated_at = :now WHERE id = :id`),
     setPassword: db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?'),
     deleteUser: db.prepare('DELETE FROM users WHERE id = ?'),
@@ -83,12 +83,12 @@ export function openDb(file) {
 
   return {
     createUser(u) {
-      q.insertUser.run({ id: u.id, email: u.email, password_hash: u.password_hash, name: u.name, voice: u.voice, currency: u.currency, language: u.language, now: now() });
+      q.insertUser.run({ id: u.id, email: u.email, password_hash: u.password_hash, name: u.name, currency: u.currency, language: u.language, now: now() });
     },
     userById: (id) => q.userById.get(id) || null,
     userByEmail: (email) => q.userByEmail.get(email) || null,
     updateUser(u) {
-      q.updateUser.run({ id: u.id, name: u.name, email: u.email, voice: u.voice, currency: u.currency, language: u.language, now: now() });
+      q.updateUser.run({ id: u.id, name: u.name, email: u.email, currency: u.currency, language: u.language, now: now() });
     },
     setPassword(userId, hash) {
       q.setPassword.run(hash, now(), userId);

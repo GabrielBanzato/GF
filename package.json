@@ -1,8 +1,8 @@
 {
-  "name": "zeni",
+  "name": "midas",
   "version": "0.1.0",
   "private": true,
-  "description": "Zeni — gestor financeiro por voz com IA (Qwen)",
+  "description": "Midas — gestor financeiro por voz com IA (Qwen)",
   "type": "module",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server/index.js",

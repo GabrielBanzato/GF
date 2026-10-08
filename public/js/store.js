@@ -1,7 +1,7 @@
 // Armazenamento local (IndexedDB) — chave/valor simples.
 // Guarda token, perfil, histórico de ops, pendências de sincronização e o backup .xlsx.
 
-const DB_NAME = 'zeni';
+const DB_NAME = 'midas';
 const STORE = 'kv';
 let dbPromise;
 

@@ -1,7 +1,7 @@
 // Cliente do Qwen via API compatível com OpenAI (DashScope ou self-hosted).
 //  - chat():       entende o comando e chama as ferramentas (function calling)
 //  - transcribe(): voz -> texto, com detecção automática de idioma (Qwen3-ASR)
-//  - speak():      texto -> voz (Qwen3-TTS), voz masculina ou feminina
+//  - speak():      texto -> voz (Qwen3-TTS), voz masculina
 
 const env = (k, d = '') => (process.env[k] ?? d).trim();
 
@@ -18,7 +18,7 @@ export function qwenConfig() {
     asrModel: hasAccess ? env('QWEN_ASR_MODEL') : '',
     ttsModel: apiKey ? env('QWEN_TTS_MODEL') : '',
     ttsUrl: env('QWEN_TTS_URL', 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation'),
-    voices: { female: env('QWEN_VOICE_FEMALE', 'Cherry'), male: env('QWEN_VOICE_MALE', 'Ethan') },
+    voice: env('QWEN_VOICE', 'Ethan'), // voz masculina
     enabled: hasAccess,
   };
 }
@@ -65,12 +65,12 @@ export async function transcribe(base64, mime) {
 }
 
 /** @returns {string|null} URL do áudio gerado (válida por algumas horas) */
-export async function speak(text, voice) {
+export async function speak(text) {
   const cfg = qwenConfig();
   if (!cfg.ttsModel || !text) return null;
   const json = await post(
     cfg.ttsUrl,
-    { model: cfg.ttsModel, input: { text, voice: cfg.voices[voice] || cfg.voices.female, language_type: 'Auto' } },
+    { model: cfg.ttsModel, input: { text, voice: cfg.voice, language_type: 'Auto' } },
     cfg.apiKey,
     30000,
   );

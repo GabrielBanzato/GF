@@ -1,13 +1,13 @@
-# Stack do Zeni. No Portainer: Stacks → Add stack → Repository (este repo)
+# Stack do Midas. No Portainer: Stacks → Add stack → Repository (este repo)
 # e preencha as variáveis de ambiente abaixo na tela da stack.
 services:
-  zeni:
+  midas:
     build: .
-    image: zeni:latest
-    container_name: zeni
+    image: midas:latest
+    container_name: midas
     restart: unless-stopped
     environment:
-      ASSISTANT_NAME: ${ASSISTANT_NAME:-Zeni}
+      ASSISTANT_NAME: ${ASSISTANT_NAME:-Midas}
       # Qwen (Alibaba Cloud Model Studio / DashScope)
       QWEN_API_KEY: ${QWEN_API_KEY:-}
       QWEN_BASE_URL: ${QWEN_BASE_URL:-https://dashscope-intl.aliyuncs.com/compatible-mode/v1}
@@ -15,19 +15,18 @@ services:
       QWEN_ASR_MODEL: ${QWEN_ASR_MODEL:-qwen3-asr-flash}
       QWEN_TTS_MODEL: ${QWEN_TTS_MODEL:-qwen3-tts-flash}
       QWEN_TTS_URL: ${QWEN_TTS_URL:-https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation}
-      QWEN_VOICE_FEMALE: ${QWEN_VOICE_FEMALE:-Cherry}
-      QWEN_VOICE_MALE: ${QWEN_VOICE_MALE:-Ethan}
+      QWEN_VOICE: ${QWEN_VOICE:-Ethan}   # voz masculina do Midas
       # E-mail do "esqueci minha senha" (https://resend.com). Sem isso o código aparece no log do container.
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      EMAIL_FROM: ${EMAIL_FROM:-Zeni <onboarding@resend.dev>}
+      EMAIL_FROM: ${EMAIL_FROM:-Midas <onboarding@resend.dev>}
     volumes:
-      - zeni-data:/app/data   # banco SQLite + planilhas: NÃO apague este volume
+      - midas-data:/app/data   # banco SQLite + planilhas: NÃO apague este volume
     ports:
-      - "${ZENI_PORT:-3000}:3000"
+      - "${MIDAS_PORT:-3000}:3000"
 
   # Cloudflare Tunnel opcional (se ainda não tiver um rodando no servidor).
   # Descomente, crie o túnel em Zero Trust → Networks → Tunnels, cole o token em
-  # CLOUDFLARE_TUNNEL_TOKEN e aponte o Public Hostname para http://zeni:3000
+  # CLOUDFLARE_TUNNEL_TOKEN e aponte o Public Hostname para http://midas:3000
   # cloudflared:
   #   image: cloudflare/cloudflared:latest
   #   restart: unless-stopped
@@ -35,7 +34,7 @@ services:
   #   environment:
   #     TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
   #   depends_on:
-  #     - zeni
+  #     - midas
 
 volumes:
-  zeni-data:
+  midas-data:

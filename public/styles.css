@@ -198,11 +198,6 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
 .form-msg { margin: 0; min-height: 1.3em; font-size: 14px; color: var(--muted); }
 .form-msg.error { color: var(--danger); }
 
-.segmented { border: 0; padding: 0; margin: 0; grid-template-columns: 1fr 1fr; }
-.segmented legend { padding: 0; margin-bottom: 6px; }
-.segmented label { position: relative; }
-.segmented input { position: absolute; opacity: 0; pointer-events: none; }
-.segmented span {
   display: block;
   text-align: center;
   padding: 11px;
@@ -212,8 +207,6 @@ svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; 
   color: var(--ink);
   font-size: 15px;
 }
-.segmented input:checked + span { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.segmented input:focus-visible + span { outline: 2px solid var(--accent); }
 
 .btn {
   border: 1px solid var(--line);

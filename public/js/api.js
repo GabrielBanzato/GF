@@ -1,5 +1,5 @@
-// Ao empacotar como app iOS (Capacitor), defina window.ZENI_API_URL com o endereço do servidor.
-const BASE = (window.ZENI_API_URL || '').replace(/\/$/, '');
+// Ao empacotar como app iOS (Capacitor), defina window.MIDAS_API_URL com o endereço do servidor.
+const BASE = (window.MIDAS_API_URL || '').replace(/\/$/, '');
 
 export class ApiError extends Error {
   constructor(status, code) { super(code); this.status = status; this.code = code; }

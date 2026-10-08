@@ -129,18 +129,17 @@ export function playUrl(url) {
 const FEMALE = ['female', 'feminin', 'luciana', 'joana', 'fernanda', 'francisca', 'catarina', 'samantha', 'karen', 'victoria', 'moira', 'tessa', 'monica', 'paulina', 'marisol', 'helena', 'maria', 'zira', 'amelie', 'amélie', 'anna', 'alice', 'tingting', 'ting-ting', 'kyoko', 'yuna', 'sara', 'ava', 'allison', 'susan', 'serena'];
 const MALE = ['male', 'masculin', 'felipe', 'daniel', 'fred', 'alex', 'diego', 'jorge', 'juan', 'thomas', 'luca', 'yuri', 'ricardo', 'david', 'mark', 'rishi', 'aaron', 'arthur', 'reed', 'eddy', 'grandpa', 'otoya'];
 
-/** Voz do próprio aparelho, escolhendo masculina/feminina pelo nome da voz. */
-export function speakLocal(text, { gender = 'female', locale = 'pt-BR' } = {}) {
+/** Voz do próprio aparelho, escolhendo uma voz masculina pelo nome. */
+export function speakLocal(text, { locale = 'pt-BR' } = {}) {
   return new Promise((resolve) => {
     if (!window.speechSynthesis || !text) return resolve();
     const prefix = locale.slice(0, 2).toLowerCase();
     const voices = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith(prefix));
-    const hints = gender === 'male' ? MALE : FEMALE;
-    const other = gender === 'male' ? FEMALE : MALE;
     const name = (v) => v.name.toLowerCase();
+    const isFemale = (v) => FEMALE.some((h) => name(v).includes(h));
     const voice =
-      voices.find((v) => hints.some((h) => name(v).includes(h)) && !(gender === 'male' && name(v).includes('female'))) ||
-      voices.find((v) => !other.some((h) => name(v).includes(h))) ||
+      voices.find((v) => MALE.some((h) => name(v).includes(h)) && !isFemale(v)) ||
+      voices.find((v) => !isFemale(v)) ||
       voices[0];
     const u = new SpeechSynthesisUtterance(text);
     u.lang = voice?.lang || locale;

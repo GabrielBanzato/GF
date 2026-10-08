@@ -22,7 +22,7 @@ export const data = {
   backupAt: null,
   serverDown: false,
   loggedOut: false,
-  assistantName: 'Zeni',
+  assistantName: 'Midas',
   onChange: () => {},
   onLogout: () => {},
 };
@@ -158,5 +158,5 @@ export async function wipeLocal() {
   await store.clear();
   Object.assign(data, { ops: [], pending: new Set(), cursor: 0, profile: null, lastSync: null, backupAt: null });
   const fs = window.Capacitor?.Plugins?.Filesystem;
-  if (fs) await fs.rmdir({ path: 'Zeni', directory: 'DOCUMENTS', recursive: true }).catch(() => {});
+  if (fs) await fs.rmdir({ path: 'Midas', directory: 'DOCUMENTS', recursive: true }).catch(() => {});
 }

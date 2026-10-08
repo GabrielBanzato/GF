@@ -1,5 +1,5 @@
 // Service worker: deixa o app abrir sem internet (a API nunca é cacheada).
-const CACHE = 'zeni-v2';
+const CACHE = 'midas-v2';
 const SHELL = [
   '/', '/index.html', '/styles.css', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-180.png', '/icons/icon-192.png', '/icons/icon-512.png',
   '/js/app.js', '/js/api.js', '/js/store.js', '/js/sync.js', '/js/voice.js', '/js/backup.js', '/js/i18n.js',

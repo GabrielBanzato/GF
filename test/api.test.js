@@ -30,7 +30,7 @@ const fakeAi = {
 };
 
 before(async () => {
-  dataDir = mkdtempSync(join(tmpdir(), 'zeni-'));
+  dataDir = mkdtempSync(join(tmpdir(), 'midas-'));
   db = openDb(':memory:');
   const app = createApp({ db, dataDir, ai: fakeAi, sendEmail: async (msg) => { sentEmails.push(msg); } });
   await new Promise((r) => { server = app.listen(0, r); });
@@ -114,7 +114,7 @@ test('fluxo completo: voz, sync offline, planilha, deletar conta', async () => {
   assert.equal((await call('GET', '/api/account', 'wrong')).status, 401);
 
   // Comando por voz (texto já transcrito)
-  const turn = await call('POST', '/api/turn', token, { text: 'fala Zeni, coloca o Fulano na lista, ele me deve 200 e tenho que receber até dia 10' });
+  const turn = await call('POST', '/api/turn', token, { text: 'fala Midas, coloca o Fulano na lista, ele me deve 200 e tenho que receber até dia 10' });
   assert.equal(turn.status, 200);
   assert.equal(turn.body.ops.length, 1);
   assert.match(turn.body.reply, /200,00/);
@@ -154,8 +154,9 @@ test('fluxo completo: voz, sync offline, planilha, deletar conta', async () => {
   assert.equal(wb.getWorksheet('Resumo').getCell('B4').value, 150);
 
   // Configurações
-  const patched = await call('PATCH', '/api/account', token, { voice: 'male', currency: 'USD', language: 'en' });
-  assert.equal(patched.body.profile.voice, 'male');
+  const patched = await call('PATCH', '/api/account', token, { currency: 'USD', language: 'en' });
+  assert.equal(patched.body.profile.currency, 'USD');
+  assert.equal(patched.body.profile.voice, undefined);
   assert.equal((await call('PATCH', '/api/account', token, { email: 'invalido' })).status, 400);
   assert.equal((await call('PATCH', '/api/account', token, { email: 'ana@example.com' })).status, 409);
 

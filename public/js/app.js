@@ -10,7 +10,7 @@ const $ = (sel) => document.querySelector(sel);
 const orb = $('#orb');
 const tz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-let config = { assistantName: 'Zeni', ai: false, serverAsr: false, serverTts: false, passwordMin: 8 };
+let config = { assistantName: 'Midas', ai: false, serverAsr: false, serverTts: false, passwordMin: 8 };
 let autoSyncStarted = false;
 let turn = 0; // identifica a conversa atual; um toque no meio cancela a anterior
 
@@ -130,7 +130,7 @@ async function speak(text, audioUrl, language) {
     try { return await voice.playUrl(audioUrl); } catch { /* cai para a voz do aparelho */ }
   }
   const loc = language && data.profile?.language === 'auto' ? language : speechLocale(data.profile?.language);
-  await voice.speakLocal(text, { gender: data.profile?.voice, locale: loc });
+  await voice.speakLocal(text, { locale: loc });
 }
 
 function pulseLedger() {
@@ -156,7 +156,6 @@ $('#settingsBtn').addEventListener('click', () => {
   const p = data.profile || {};
   f.name.value = p.name || '';
   f.email.value = p.email || '';
-  f.voice.value = p.voice || 'female';
   f.currency.value = p.currency || 'BRL';
   f.language.value = p.language || 'auto';
   $('#settingsMsg').textContent = '';
@@ -175,7 +174,7 @@ $('#settingsForm').addEventListener('submit', async (e) => {
   msg.className = 'form-msg';
   try {
     const { profile } = await api('PATCH', '/api/account', {
-      name: f.name.value, email: f.email.value, voice: f.voice.value, currency: f.currency.value, language: f.language.value,
+      name: f.name.value, email: f.email.value, currency: f.currency.value, language: f.language.value,
     });
     await setProfile(profile);
     setLanguage(profile.language);
@@ -396,7 +395,7 @@ $('#authForm').addEventListener('submit', async (e) => {
       : authMode === 'reset' ? await api('POST', '/api/auth/reset', { email, code: f.code.value, password: f.password.value })
       : await api('POST', '/api/auth/register', {
           name: f.name.value, email, password: f.password.value,
-          voice: data.profile?.voice || 'female', currency: data.profile?.currency || guessCurrency(), language: data.profile?.language || 'auto',
+          currency: data.profile?.currency || guessCurrency(), language: data.profile?.language || 'auto',
         });
     await signedIn(session);
     f.password.value = '';
@@ -412,7 +411,7 @@ async function signedIn({ token, profile }) {
   if (data.profile?.email && data.profile.email !== profile.email) await wipeLocal();
   await store.set('token', token);
   setToken(token);
-  try { localStorage.setItem('zeni.hasAccount', '1'); } catch { /* só muda a aba inicial do login */ }
+  try { localStorage.setItem('midas.hasAccount', '1'); } catch { /* só muda a aba inicial do login */ }
   // Dados locais da mesma conta (ex.: sessão expirou offline) sobem; ids repetidos são ignorados.
   data.pending = new Set(data.ops.map((o) => o.id));
   data.cursor = 0;
@@ -497,7 +496,7 @@ async function boot() {
 
   if (!token || !data.profile) {
     let known = Boolean(data.profile);
-    try { known ||= localStorage.getItem('zeni.hasAccount') === '1'; } catch { /* sem localStorage */ }
+    try { known ||= localStorage.getItem('midas.hasAccount') === '1'; } catch { /* sem localStorage */ }
     showAuth(known ? 'login' : 'register');
   }
   else startSync();

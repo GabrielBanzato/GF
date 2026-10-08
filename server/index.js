@@ -17,7 +17,6 @@ import {
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export const DELETE_PHRASES = ['DELETAR', 'DELETE', 'ELIMINAR'];
-const VOICES = ['female', 'male'];
 const LANGUAGES = ['auto', 'pt', 'en', 'es', 'fr', 'de', 'it', 'zh', 'ja', 'ko'];
 const CURRENCY_RE = /^[A-Z]{3}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,7 +27,7 @@ class HttpError extends Error {
 }
 
 function publicProfile(u) {
-  return { name: u.name, email: u.email, voice: u.voice, currency: u.currency, language: u.language };
+  return { name: u.name, email: u.email, currency: u.currency, language: u.language };
 }
 
 const normalizeEmail = (e) => String(e ?? '').trim().toLowerCase();
@@ -47,10 +46,6 @@ function validateProfile(body, current = {}) {
     if (!EMAIL_RE.test(email) || email.length > 160) throw new HttpError(400, 'invalid_email');
     p.email = email;
   }
-  if (body.voice !== undefined) {
-    if (!VOICES.includes(body.voice)) throw new HttpError(400, 'invalid_voice');
-    p.voice = body.voice;
-  }
   if (body.currency !== undefined) {
     if (!CURRENCY_RE.test(body.currency)) throw new HttpError(400, 'invalid_currency');
     p.currency = body.currency;
@@ -63,7 +58,7 @@ function validateProfile(body, current = {}) {
 }
 
 export function createApp({
-  db, dataDir, assistantName = 'Zeni',
+  db, dataDir, assistantName = 'Midas',
   ai = { chat, transcribe, speak, config: qwenConfig },
   sendEmail = sendResetEmail,
 } = {}) {
@@ -123,7 +118,7 @@ export function createApp({
   // --- Login ---------------------------------------------------------------
   app.post('/api/auth/register', async (req, res) => {
     const body = req.body || {};
-    const profile = validateProfile(body, { name: '', email: '', voice: 'female', currency: 'BRL', language: 'auto' });
+    const profile = validateProfile(body, { name: '', email: '', currency: 'BRL', language: 'auto' });
     if (!profile.name) throw new HttpError(400, 'name_required');
     if (!profile.email) throw new HttpError(400, 'invalid_email');
     const password = validatePassword(body.password);
@@ -269,7 +264,7 @@ export function createApp({
     if (ops.length) await writeSheet(user, req.timeZone);
 
     let audioUrl = null;
-    try { audioUrl = await ai.speak(reply, user.voice); } catch (err) { console.warn('[tts]', err.message); }
+    try { audioUrl = await ai.speak(reply); } catch (err) { console.warn('[tts]', err.message); }
 
     res.json({ transcript: text, language: spokenLanguage, reply, audioUrl, ops, cursor: db.cursor(user.id), heard: true });
   });
@@ -297,8 +292,8 @@ export function createApp({
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try { process.loadEnvFile(join(ROOT, '.env')); } catch { /* .env é opcional */ }
   const dataDir = process.env.DATA_DIR || join(ROOT, 'data');
-  const db = openDb(join(dataDir, 'zeni.db'));
-  const assistantName = process.env.ASSISTANT_NAME || 'Zeni';
+  const db = openDb(join(dataDir, 'midas.db'));
+  const assistantName = process.env.ASSISTANT_NAME || 'Midas';
   const app = createApp({ db, dataDir, assistantName });
   const port = Number(process.env.PORT) || 3000;
   app.listen(port, () => {
