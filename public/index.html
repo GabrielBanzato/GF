@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0e0f11" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Zeni" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/icon-180.png" />
+  <link rel="stylesheet" href="/styles.css" />
+  <title>Zeni</title>
+</head>
+<body>
+  <button id="settingsBtn" class="corner corner-tl" type="button" data-i18n-label="settings">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+
+  <main class="stage">
+    <button id="orb" class="orb" type="button" data-state="idle" data-i18n-label="tapToTalk">
+      <span class="halo" aria-hidden="true"></span>
+      <svg class="icon-mic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <svg class="icon-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+    </button>
+    <p id="status" class="status" aria-live="polite"></p>
+    <div class="captions" aria-live="polite">
+      <p id="heard" class="heard"></p>
+      <p id="reply" class="reply"></p>
+    </div>
+  </main>
+
+  <button id="ledgerBtn" class="corner corner-br" type="button" data-i18n-label="ledger">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <g transform="scale(.8)" stroke-width="2.4"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></g>
+      <g transform="translate(12 12) scale(.5)" stroke-width="3.6"><path d="M12 20h.01"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/><path d="M5 12.859a10 10 0 0 1 5.17-2.69"/><path d="M19 12.859a10 10 0 0 0-2.007-1.523"/><path d="M2 8.82a15 15 0 0 1 4.177-2.643"/><path d="M22 8.82a15 15 0 0 0-11.288-3.764"/><path d="m2 2 20 20"/></g>
+    </svg>
+    <span id="ledgerBadge" class="badge" hidden></span>
+  </button>
+
+  <!-- Configurações -->
+  <section id="settingsSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <header class="sheet-head">
+      <h2 id="settingsTitle" data-i18n="settings"></h2>
+      <button class="close" type="button" data-close data-i18n-label="close">×</button>
+    </header>
+    <form id="settingsForm" class="form" novalidate>
+      <label><span data-i18n="name"></span><input name="name" autocomplete="name" maxlength="80" required /></label>
+      <label><span data-i18n="email"></span><input name="email" type="email" autocomplete="email" inputmode="email" maxlength="160" /></label>
+      <fieldset class="segmented">
+        <legend data-i18n="voice"></legend>
+        <label><input type="radio" name="voice" value="female" /><span data-i18n="female"></span></label>
+        <label><input type="radio" name="voice" value="male" /><span data-i18n="male"></span></label>
+      </fieldset>
+      <label><span data-i18n="currency"></span><select name="currency"></select></label>
+      <label><span data-i18n="language"></span><select name="language"></select></label>
+      <button class="btn primary" type="submit" data-i18n="save"></button>
+      <p id="settingsMsg" class="form-msg" aria-live="polite"></p>
+    </form>
+
+    <div class="account-actions">
+      <button id="passwordStart" class="btn" type="button" data-i18n="changePassword"></button>
+      <form id="passwordForm" class="form" hidden novalidate>
+        <input name="username" type="email" autocomplete="username" hidden />
+        <label><span data-i18n="currentPassword"></span><input name="currentPassword" type="password" autocomplete="current-password" maxlength="200" /></label>
+        <label><span data-i18n="newPassword"></span><input name="newPassword" type="password" autocomplete="new-password" maxlength="200" /></label>
+        <button class="btn primary" type="submit" data-i18n="save"></button>
+        <p id="passwordMsg" class="form-msg" aria-live="polite"></p>
+      </form>
+      <button id="logoutBtn" class="btn" type="button" data-i18n="logout"></button>
+    </div>
+
+    <div class="danger">
+      <h3 data-i18n="dangerZone"></h3>
+      <p data-i18n="deleteWarn"></p>
+      <button id="deleteStart" class="btn danger-btn" type="button" data-i18n="deleteAccount"></button>
+      <form id="deleteForm" class="form" hidden>
+        <label><span id="deleteLabel"></span><input name="confirmation" autocomplete="off" autocapitalize="characters" spellcheck="false" /></label>
+        <button class="btn danger-btn solid" type="submit" data-i18n="deleteConfirm" disabled></button>
+        <p id="deleteMsg" class="form-msg" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Controle financeiro (offline) -->
+  <section id="ledgerSheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="ledgerTitle">
+    <header class="sheet-head">
+      <div>
+        <h2 id="ledgerTitle" data-i18n="ledger"></h2>
+        <p id="syncStatus" class="sync-status"></p>
+      </div>
+      <button class="close" type="button" data-close data-i18n-label="close">×</button>
+    </header>
+
+    <div class="totals">
+      <div><span data-i18n="toReceive"></span><strong id="totalIn"></strong></div>
+      <div><span data-i18n="toPay"></span><strong id="totalOut"></strong></div>
+    </div>
+
+    <ul id="people" class="people"></ul>
+
+    <form id="entryForm" class="form entry-form">
+      <div class="row">
+        <label class="grow"><span data-i18n="person"></span><input name="person" list="peopleList" autocomplete="off" required /></label>
+        <label><span data-i18n="amount"></span><input name="amount" inputmode="decimal" required /></label>
+      </div>
+      <div class="row">
+        <label class="grow"><span data-i18n="type"></span>
+          <select name="kind">
+            <option value="debt_in" data-i18n="t_debt_in"></option>
+            <option value="debt_out" data-i18n="t_debt_out"></option>
+            <option value="payment_in" data-i18n="t_payment_in"></option>
+            <option value="payment_out" data-i18n="t_payment_out"></option>
+          </select>
+        </label>
+        <label><span data-i18n="date"></span><input name="date" type="date" required /></label>
+      </div>
+      <label data-due><span data-i18n="due"></span><input name="dueDate" type="date" /></label>
+      <label><span data-i18n="note"></span><input name="note" maxlength="200" /></label>
+      <button class="btn primary" type="submit" data-i18n="add"></button>
+      <datalist id="peopleList"></datalist>
+    </form>
+
+    <footer class="ledger-foot">
+      <button id="downloadBtn" class="btn" type="button" data-i18n="download"></button>
+      <p id="backupAt" class="sync-status"></p>
+    </footer>
+  </section>
+
+  <!-- Login / cadastro / recuperar senha -->
+  <section id="welcome" class="sheet welcome" hidden role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="welcome-body">
+      <h1 id="welcomeTitle"></h1>
+      <p id="welcomeSub"></p>
+      <div class="tabs" role="tablist" data-only="login register">
+        <button type="button" role="tab" data-mode="login" data-i18n="login"></button>
+        <button type="button" role="tab" data-mode="register" data-i18n="register"></button>
+      </div>
+      <form id="authForm" class="form" novalidate>
+        <label data-only="register"><span data-i18n="name"></span><input name="name" autocomplete="name" maxlength="80" /></label>
+        <label><span data-i18n="email"></span><input name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="160" /></label>
+        <label data-only="reset"><span data-i18n="code"></span><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" /></label>
+        <label data-only="login register reset"><span id="passwordLabel"></span><input name="password" type="password" maxlength="200" /></label>
+        <button id="authSubmit" class="btn primary" type="submit"></button>
+        <p id="authMsg" class="form-msg" aria-live="polite"></p>
+        <button class="link" type="button" data-goto="forgot" data-only="login" data-i18n="forgotPassword"></button>
+        <button class="link" type="button" data-goto="login" data-only="forgot reset" data-i18n="back"></button>
+      </form>
+    </div>
+  </section>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
