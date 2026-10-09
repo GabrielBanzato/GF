@@ -19,9 +19,9 @@ Uma tela, um botão. Você fala, o Midas anota quem te deve, quem você deve, qu
    |---|---|
    | `QWEN_API_KEY` | Chave do Alibaba Cloud Model Studio (DashScope). Sem ela a voz fica desligada, o resto funciona. |
    | `RESEND_API_KEY` / `EMAIL_FROM` | Envio do código de recuperação de senha. Sem ela, o código aparece no log do container (`docker logs midas`). |
-   | `MIDAS_PORT` | Porta no host (padrão `3000`). |
+   | `MIDAS_PORT` | Porta no host (padrão `3210`). Se der "port is already allocated", troque por outra livre. |
    As outras variáveis do `docker-compose.yml` já têm valor padrão.
-3. **Cloudflare Zero Trust → Tunnels → Public Hostname** apontando para `http://<ip-do-servidor>:3000` (ou `http://midas:3000` se o `cloudflared` estiver na mesma rede Docker; tem um serviço pronto comentado no compose).
+3. **Cloudflare Zero Trust → Tunnels → Public Hostname** apontando para `http://<ip-do-servidor>:3210` (ou `http://midas:3000` se o `cloudflared` estiver na mesma rede Docker; tem um serviço pronto comentado no compose).
 4. Abra `https://seu-dominio` no celular. **HTTPS é obrigatório**: sem ele o microfone e o service worker não funcionam.
 
 Os dados (SQLite + planilhas) ficam no volume `midas-data`. Faça backup dele.

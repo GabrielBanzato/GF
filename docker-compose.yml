@@ -22,7 +22,7 @@ services:
     volumes:
       - midas-data:/app/data   # banco SQLite + planilhas: NÃO apague este volume
     ports:
-      - "${MIDAS_PORT:-3000}:3000"
+      - "${MIDAS_PORT:-3210}:3000"
 
   # Cloudflare Tunnel opcional (se ainda não tiver um rodando no servidor).
   # Descomente, crie o túnel em Zero Trust → Networks → Tunnels, cole o token em
