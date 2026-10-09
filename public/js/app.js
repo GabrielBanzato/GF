@@ -5,8 +5,8 @@ import { data, loadLocal, setProfile, addLocalOp, addLocalOps, newOp, applyRemot
 import { saveBackup, exportBackup } from './backup.js';
 import * as voice from './voice.js';
 import * as native from './native.js';
-import { commandInstructions, buildCommandPrompt, applyCommand } from '/shared/commands.js';
-import { OP, summarize, formatMoney, toCents, todayIn } from '/shared/ledger.js';
+import { commandInstructions, buildCommandPrompt, applyCommand } from '../shared/commands.js';
+import { OP, summarize, formatMoney, toCents, todayIn } from '../shared/ledger.js';
 
 const $ = (sel) => document.querySelector(sel);
 const orb = $('#orb');
@@ -649,7 +649,17 @@ async function boot() {
   }
   else startSync();
 
-  if ('serviceWorker' in navigator && !window.Capacitor) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  if ('serviceWorker' in navigator && !window.Capacitor) {
+    // Quando uma versão nova do app é publicada, recarrega uma vez para usá-la.
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hadController && !reloaded) { reloaded = true; location.reload(); }
+    });
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      .then((reg) => document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); }))
+      .catch(() => {});
+  }
 }
 
 boot();

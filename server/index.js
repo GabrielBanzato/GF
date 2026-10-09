@@ -1,7 +1,7 @@
 import express from 'express';
 import ExcelJS from 'exceljs';
-import { randomUUID } from 'node:crypto';
-import { mkdirSync, renameSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
+import { mkdirSync, renameSync, rmSync, writeFileSync, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
@@ -15,6 +15,21 @@ import {
 } from './auth.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+/** Versão do front-end: hash do conteúdo de public/ e shared/ (muda a cada alteração). */
+function buildId() {
+  const hash = createHash('sha256');
+  const walk = (dir) => {
+    for (const name of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const path = join(dir, name.name);
+      if (name.isDirectory()) walk(path);
+      else hash.update(name.name).update(readFileSync(path));
+    }
+  };
+  walk(join(ROOT, 'public'));
+  walk(join(ROOT, 'shared'));
+  return hash.digest('hex').slice(0, 12);
+}
 
 export const DELETE_PHRASES = ['DELETAR', 'DELETE', 'ELIMINAR'];
 const LANGUAGES = ['auto', 'pt', 'en', 'es', 'fr', 'de', 'it', 'zh', 'ja', 'ko'];
@@ -323,9 +338,28 @@ export function createApp({
   });
 
   // --- Front-end ----------------------------------------------------------
-  app.use('/shared', express.static(join(ROOT, 'shared')));
-  app.get('/vendor/exceljs.min.js', (_req, res) => res.sendFile(join(ROOT, 'node_modules/exceljs/dist/exceljs.min.js')));
-  app.use(express.static(join(ROOT, 'public')));
+  // Cada publicação serve CSS/JS num caminho com a versão (/_/<build>/...).
+  // Assim nenhum cache (navegador, Cloudflare, service worker) entrega arquivos
+  // antigos misturados com o HTML novo. O HTML e o service worker nunca são cacheados.
+  const build = buildId();
+  const versioned = `/_/${build}`;
+  const noCache = (res) => res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  const forever = { maxAge: '365d', immutable: true };
+
+  const page = readFileSync(join(ROOT, 'public/index.html'), 'utf8')
+    .replace('href="/styles.css"', `href="${versioned}/styles.css"`)
+    .replace('src="/js/app.js"', `src="${versioned}/js/app.js"`);
+  const worker = readFileSync(join(ROOT, 'public/sw.js'), 'utf8').replaceAll('__BUILD__', build);
+
+  app.get(['/', '/index.html'], (_req, res) => { noCache(res); res.type('html').send(page); });
+  app.get('/sw.js', (_req, res) => { noCache(res); res.type('js').send(worker); });
+  app.get('/api/version', (_req, res) => { noCache(res); res.json({ build }); });
+  app.use(`${versioned}/shared`, express.static(join(ROOT, 'shared'), forever));
+  app.use(versioned, express.static(join(ROOT, 'public'), forever));
+  app.get('/vendor/exceljs.min.js', (_req, res) => res.sendFile(join(ROOT, 'node_modules/exceljs/dist/exceljs.min.js'), { maxAge: '30d' }));
+  // Caminhos sem versão continuam funcionando (versões antigas do app), sem cache
+  app.use('/shared', express.static(join(ROOT, 'shared'), { setHeaders: noCache }));
+  app.use(express.static(join(ROOT, 'public'), { setHeaders: noCache }));
 
   app.use((err, _req, res, _next) => {
     const status = err.status || (err.type === 'entity.too.large' ? 413 : 500);

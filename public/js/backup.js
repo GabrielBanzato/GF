@@ -4,8 +4,8 @@
 //  - No app iOS (Capacitor): também gravado em Documentos/Midas/controle-financeiro.xlsx,
 //    visível no app Arquivos do iPhone.
 
-import { buildWorkbook } from '/shared/spreadsheet.js';
-import { todayIn } from '/shared/ledger.js';
+import { buildWorkbook } from '../shared/spreadsheet.js';
+import { todayIn } from '../shared/ledger.js';
 import { store } from './store.js';
 
 export const BACKUP_FILENAME = 'controle-financeiro.xlsx';

@@ -7,7 +7,7 @@
 
 import { store } from './store.js';
 import { api, ApiError } from './api.js';
-import { mergeOps, createOpFactory } from '/shared/ledger.js';
+import { mergeOps, createOpFactory } from '../shared/ledger.js';
 import { saveBackup } from './backup.js';
 
 const makeOp = createOpFactory();
