@@ -2,8 +2,9 @@
 # e preencha as variáveis de ambiente abaixo na tela da stack.
 services:
   midas:
+    # A imagem é sempre construída a partir deste repositório (não existe no Docker Hub).
     build: .
-    image: midas:latest
+    pull_policy: build
     container_name: midas
     restart: unless-stopped
     environment:
