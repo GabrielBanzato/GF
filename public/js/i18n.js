@@ -2,6 +2,9 @@ const STRINGS = {
   pt: {
     tapToTalk: 'Toque para falar', listening: 'Ouvindo…', thinking: 'Pensando…', speaking: 'Falando…',
     transcribing: 'Entendendo o áudio…', preparingVoice: 'Preparando a voz…', queued: 'Na fila ({n} na frente)…',
+    goodMorning: 'Bom dia', goodAfternoon: 'Boa tarde', goodEvening: 'Boa noite', greetName: '{greet}, {name}',
+    hints: 'Fala Midas, o João me deve 200 reais até sexta|Desconta 50 da conta da Ana, ela me pagou ontem|Quanto o Pedro ainda me deve?|Eu devo 80 reais pro Carlos|Apaga o último lançamento',
+    tagline: 'Seu dinheiro, na ponta da língua.', profile: 'Perfil', security: 'Conta e segurança', people: 'Pessoas', newEntry: 'Novo lançamento', owesYou: 'te deve', youOwe: 'você deve',
     appleIntelligenceOff: 'Ative a Apple Intelligence em Ajustes para falar com o Midas.', deviceNotSupported: 'O Midas precisa de um iPhone com Apple Intelligence (iPhone 15 Pro ou mais novo).',
     didntHear: 'Não ouvi nada. Toque e fale de novo.', micDenied: 'Permita o uso do microfone para falar comigo.',
     offlineTalk: 'Sem conexão. Use o lápis para registrar offline — eu sincronizo quando a conexão voltar.',
@@ -37,6 +40,9 @@ const STRINGS = {
   en: {
     tapToTalk: 'Tap to talk', listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking…',
     transcribing: 'Understanding the audio…', preparingVoice: 'Preparing the voice…', queued: 'In line ({n} ahead)…',
+    goodMorning: 'Good morning', goodAfternoon: 'Good afternoon', goodEvening: 'Good evening', greetName: '{greet}, {name}',
+    hints: 'Hey Midas, John owes me 200 by Friday|Take 50 off Anna, she paid me yesterday|How much does Peter still owe me?|I owe Carlos 80 dollars|Delete the last entry',
+    tagline: 'Your money, at the tip of your tongue.', profile: 'Profile', security: 'Account & security', people: 'People', newEntry: 'New entry', owesYou: 'owes you', youOwe: 'you owe',
     appleIntelligenceOff: 'Turn on Apple Intelligence in Settings to talk to Midas.', deviceNotSupported: 'Midas needs an iPhone with Apple Intelligence (iPhone 15 Pro or newer).',
     didntHear: "I didn't hear anything. Tap and try again.", micDenied: 'Allow microphone access to talk to me.',
     offlineTalk: "You're offline. Use the pencil to log changes — I'll sync when you're back.",
@@ -72,6 +78,9 @@ const STRINGS = {
   es: {
     tapToTalk: 'Toca para hablar', listening: 'Escuchando…', thinking: 'Pensando…', speaking: 'Hablando…',
     transcribing: 'Entendiendo el audio…', preparingVoice: 'Preparando la voz…', queued: 'En fila ({n} delante)…',
+    goodMorning: 'Buenos días', goodAfternoon: 'Buenas tardes', goodEvening: 'Buenas noches', greetName: '{greet}, {name}',
+    hints: 'Oye Midas, Juan me debe 200 hasta el viernes|Descuenta 50 a Ana, me pagó ayer|¿Cuánto me debe todavía Pedro?|Le debo 80 a Carlos|Borra el último movimiento',
+    tagline: 'Tu dinero, en la punta de la lengua.', profile: 'Perfil', security: 'Cuenta y seguridad', people: 'Personas', newEntry: 'Nuevo movimiento', owesYou: 'te debe', youOwe: 'le debes',
     appleIntelligenceOff: 'Activa Apple Intelligence en Ajustes para hablar con Midas.', deviceNotSupported: 'Midas necesita un iPhone con Apple Intelligence (iPhone 15 Pro o posterior).',
     didntHear: 'No escuché nada. Toca y habla de nuevo.', micDenied: 'Permite el micrófono para hablar conmigo.',
     offlineTalk: 'Sin conexión. Usa el lápiz para registrar — sincronizo cuando vuelva la conexión.',

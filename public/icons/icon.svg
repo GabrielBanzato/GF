@@ -1,9 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#16171a"/>
-  <circle cx="256" cy="256" r="150" fill="#1f8a65"/>
-  <g fill="none" stroke="#f6f5f2" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" transform="translate(160 160) scale(8)">
-    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke-width="2"/>
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke-width="2"/>
-    <path d="M12 19v3" stroke-width="2"/>
-  </g>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#1c1810"/>
+      <stop offset="1" stop-color="#09090a"/>
+    </radialGradient>
+    <radialGradient id="gold" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f1d38e"/>
+      <stop offset=".42" stop-color="#d6ae62"/>
+      <stop offset=".72" stop-color="#a77d35"/>
+      <stop offset="1" stop-color="#5e4317"/>
+    </radialGradient>
+    <radialGradient id="hi" cx="34%" cy="28%" r="30%">
+      <stop offset="0" stop-color="#fffaeb" stop-opacity=".95"/>
+      <stop offset=".4" stop-color="#fff4d6" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#fff4d6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shade" cx="70%" cy="85%" r="55%">
+      <stop offset="0" stop-color="#3c280a" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#3c280a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset=".55" stop-color="#d4af6a" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#d4af6a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="210" fill="url(#glow)"/>
+  <circle cx="256" cy="256" r="178" fill="none" stroke="#d4af6a" stroke-opacity=".35" stroke-width="2"/>
+  <circle cx="256" cy="256" r="150" fill="url(#gold)"/>
+  <circle cx="256" cy="256" r="150" fill="url(#shade)"/>
+  <circle cx="256" cy="256" r="150" fill="url(#hi)"/>
 </svg>

@@ -54,11 +54,38 @@ function setState(state) {
   orb.classList.toggle('no-level', state === 'listening' && !config.serverAsr);
   const labels = { idle: 'tapToTalk', listening: 'listening', thinking: 'thinking', speaking: 'speaking' };
   $('#status').textContent = t(labels[state]);
+  updateHint();
 }
 
 function setCaption(heard = '', reply = '') {
   $('#heard').textContent = heard;
   $('#reply').textContent = reply;
+  updateHint();
+}
+
+// --- Saudação e frases de exemplo (tela inicial) ---------------------------
+function renderGreeting() {
+  const hour = new Date().getHours();
+  const key = hour < 5 ? 'goodEvening' : hour < 12 ? 'goodMorning' : hour < 18 ? 'goodAfternoon' : 'goodEvening';
+  const first = String(data.profile?.name || '').trim().split(/\s+/)[0];
+  $('#greeting').textContent = first ? t('greetName', { greet: t(key), name: first }) : t(key);
+  $('#today').textContent = new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+let hintIndex = 0;
+function updateHint() {
+  const hint = $('#hint');
+  const idle = orb.dataset.state === 'idle' && !$('#heard').textContent && !$('#reply').textContent;
+  hint.classList.toggle('show', idle);
+}
+function rotateHint() {
+  const hints = t('hints').split('|');
+  const hint = $('#hint');
+  hint.classList.remove('show');
+  setTimeout(() => {
+    hint.textContent = `“${hints[hintIndex++ % hints.length]}”`;
+    updateHint();
+  }, 700);
 }
 
 function flashStatus(key) {
@@ -322,13 +349,15 @@ $('#deleteForm').addEventListener('submit', async (e) => {
 });
 
 // --- Controle financeiro / offline -----------------------------------------
-$('#ledgerBtn').addEventListener('click', () => {
+function openLedger() {
   const f = $('#entryForm');
   if (!f.date.value) f.date.value = todayIn(tz());
   openSheet('ledgerSheet');
   renderLedger();
   sync();
-});
+}
+$('#ledgerBtn').addEventListener('click', openLedger);
+$('#summaryStrip').addEventListener('click', openLedger);
 
 $('#entryForm').addEventListener('change', (e) => {
   if (e.target.name === 'kind') $('[data-due]').hidden = !e.target.value.startsWith('debt');
@@ -378,6 +407,11 @@ function renderLedger() {
   badge.hidden = !(pending || offline || data.serverDown);
   badge.classList.toggle('warn', offline || data.serverDown);
 
+  // Faixa "a receber · a pagar" na tela inicial
+  $('#summaryStrip').hidden = !people.length;
+  $('#sumIn').textContent = money(totals.receivable);
+  $('#sumOut').textContent = money(totals.payable);
+
   if ($('#ledgerSheet').hidden) return;
 
   const status = $('#syncStatus');
@@ -401,10 +435,16 @@ function renderLedger() {
   } else {
     list.replaceChildren(...people.map((p) => {
       const nextDue = [p.nextDueIn, p.nextDueOut].filter(Boolean).sort()[0];
-      const sub = p.status === 'settled' ? t('settled') : p.status === 'overdue' ? `${t('overdue')} · ${fmtDate(nextDue)}` : nextDue ? t('dueOn', { date: fmtDate(nextDue) }) : '';
+      const initials = p.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+      const sub = el('small', {});
+      if (p.status === 'overdue') sub.append(el('span', { className: 'pill overdue', textContent: t('overdue') }), fmtDate(nextDue));
+      else if (p.status === 'settled') sub.append(el('span', { className: 'pill settled', textContent: t('settled') }));
+      else if (nextDue) sub.append(t('dueOn', { date: fmtDate(nextDue) }));
+      else sub.append(t(p.net >= 0 ? 'owesYou' : 'youOwe'));
       const details = el('details', { open: open.has(p.key) },
         el('summary', {},
-          el('span', { className: 'who' }, el('b', { textContent: p.name }), el('small', { className: p.status === 'overdue' ? 'overdue' : '', textContent: sub })),
+          el('span', { className: 'avatar', textContent: initials, ariaHidden: 'true' }),
+          el('span', { className: 'who' }, el('b', { textContent: p.name }), sub),
           el('span', { className: `net ${p.net > 0 ? 'pos' : p.net < 0 ? 'neg' : ''}`, textContent: money(p.net) }),
         ),
         el('ul', { className: 'entries' }, ...p.entries.map((e) => {
@@ -588,14 +628,17 @@ async function boot() {
     config = { ...config, ...((await store.get('config')) || {}) };
   }
   data.assistantName = config.assistantName;
-  data.onChange = renderLedger;
+  data.onChange = () => { renderLedger(); renderGreeting(); };
   data.onLogout = onLogout;
 
   setLanguage(data.profile?.language);
   applyI18n();
   setState('idle');
   renderLedger();
-  setInterval(renderLedger, 30000); // atualiza "sincronizado há X min"
+  renderGreeting();
+  rotateHint();
+  setInterval(rotateHint, 5000);
+  setInterval(() => { renderLedger(); renderGreeting(); }, 30000); // "sincronizado há X min", saudação
 
   checkNative();
 
