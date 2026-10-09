@@ -208,6 +208,7 @@ export function summarize(ops, today) {
   const state = replay(ops);
   const statusRank = { overdue: 0, open: 1, settled: 2 };
   const people = [...state.people.values()]
+    .filter((p) => p.entries.length) // quem ficou sem nenhum lançamento some da lista
     .map((p) => summarizePerson(p, today))
     .sort((a, b) => statusRank[a.status] - statusRank[b.status] || Math.abs(b.net) - Math.abs(a.net) || a.name.localeCompare(b.name));
   const totals = people.reduce(

@@ -2,7 +2,7 @@
 // Cada ferramenta valida os argumentos e devolve os ops a gravar + um resultado
 // curto que volta para o modelo formular a resposta falada.
 
-import { OP, replay, findPerson, summarizePerson, toCents, isDate, formatMoney } from '../shared/ledger.js';
+import { OP, replay, findPerson, summarizePerson, toCents, isDate, formatMoney } from './ledger.js';
 
 const direction = {
   type: 'string',

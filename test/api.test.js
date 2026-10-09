@@ -113,9 +113,17 @@ test('fluxo completo: voz, sync offline, planilha, deletar conta', async () => {
 
   assert.equal((await call('GET', '/api/account', 'wrong')).status, 401);
 
-  // Comando por voz (texto já transcrito)
-  const turn = await call('POST', '/api/turn', token, { text: 'fala Midas, coloca o Fulano na lista, ele me deve 200 e tenho que receber até dia 10' });
-  assert.equal(turn.status, 200);
+  // Comando por voz (texto já transcrito): vira um pedido em segundo plano
+  const started = await call('POST', '/api/turn', token, { text: 'fala Midas, coloca o Fulano na lista, ele me deve 200 e tenho que receber até dia 10' });
+  assert.equal(started.status, 202);
+  assert.ok(started.body.jobId);
+  let turn;
+  do {
+    await new Promise((r) => setTimeout(r, 20));
+    turn = await call('GET', `/api/turn/${started.body.jobId}`, token);
+  } while (!['done', 'error'].includes(turn.body.status));
+  assert.equal(turn.body.status, 'done');
+  assert.equal((await call('GET', `/api/turn/${started.body.jobId}`, 'outro-token')).status, 401);
   assert.equal(turn.body.ops.length, 1);
   assert.match(turn.body.reply, /200,00/);
 

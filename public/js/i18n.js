@@ -1,6 +1,8 @@
 const STRINGS = {
   pt: {
     tapToTalk: 'Toque para falar', listening: 'Ouvindo…', thinking: 'Pensando…', speaking: 'Falando…',
+    transcribing: 'Entendendo o áudio…', preparingVoice: 'Preparando a voz…', queued: 'Na fila ({n} na frente)…',
+    appleIntelligenceOff: 'Ative a Apple Intelligence em Ajustes para falar com o Midas.', deviceNotSupported: 'O Midas precisa de um iPhone com Apple Intelligence (iPhone 15 Pro ou mais novo).',
     didntHear: 'Não ouvi nada. Toque e fale de novo.', micDenied: 'Permita o uso do microfone para falar comigo.',
     offlineTalk: 'Sem conexão. Use o lápis para registrar offline — eu sincronizo quando a conexão voltar.',
     aiOff: 'A IA ainda não está configurada no servidor.', genericError: 'Algo deu errado. Tente de novo.',
@@ -34,6 +36,8 @@ const STRINGS = {
   },
   en: {
     tapToTalk: 'Tap to talk', listening: 'Listening…', thinking: 'Thinking…', speaking: 'Speaking…',
+    transcribing: 'Understanding the audio…', preparingVoice: 'Preparing the voice…', queued: 'In line ({n} ahead)…',
+    appleIntelligenceOff: 'Turn on Apple Intelligence in Settings to talk to Midas.', deviceNotSupported: 'Midas needs an iPhone with Apple Intelligence (iPhone 15 Pro or newer).',
     didntHear: "I didn't hear anything. Tap and try again.", micDenied: 'Allow microphone access to talk to me.',
     offlineTalk: "You're offline. Use the pencil to log changes — I'll sync when you're back.",
     aiOff: 'The AI is not configured on the server yet.', genericError: 'Something went wrong. Try again.',
@@ -67,6 +71,8 @@ const STRINGS = {
   },
   es: {
     tapToTalk: 'Toca para hablar', listening: 'Escuchando…', thinking: 'Pensando…', speaking: 'Hablando…',
+    transcribing: 'Entendiendo el audio…', preparingVoice: 'Preparando la voz…', queued: 'En fila ({n} delante)…',
+    appleIntelligenceOff: 'Activa Apple Intelligence en Ajustes para hablar con Midas.', deviceNotSupported: 'Midas necesita un iPhone con Apple Intelligence (iPhone 15 Pro o posterior).',
     didntHear: 'No escuché nada. Toca y habla de nuevo.', micDenied: 'Permite el micrófono para hablar conmigo.',
     offlineTalk: 'Sin conexión. Usa el lápiz para registrar — sincronizo cuando vuelva la conexión.',
     aiOff: 'La IA aún no está configurada en el servidor.', genericError: 'Algo salió mal. Inténtalo de nuevo.',

@@ -1,9 +1,9 @@
 // Service worker: deixa o app abrir sem internet (a API nunca é cacheada).
-const CACHE = 'midas-v2';
+const CACHE = 'midas-v3';
 const SHELL = [
   '/', '/index.html', '/styles.css', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-180.png', '/icons/icon-192.png', '/icons/icon-512.png',
-  '/js/app.js', '/js/api.js', '/js/store.js', '/js/sync.js', '/js/voice.js', '/js/backup.js', '/js/i18n.js',
-  '/shared/ledger.js', '/shared/spreadsheet.js', '/vendor/exceljs.min.js',
+  '/js/app.js', '/js/api.js', '/js/store.js', '/js/sync.js', '/js/voice.js', '/js/backup.js', '/js/i18n.js', '/js/native.js',
+  '/shared/ledger.js', '/shared/spreadsheet.js', '/shared/tools.js', '/shared/commands.js', '/vendor/exceljs.min.js',
 ];
 
 self.addEventListener('install', (e) => {

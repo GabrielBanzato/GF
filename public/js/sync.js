@@ -87,6 +87,19 @@ export async function addLocalOp(type, payload) {
   return op;
 }
 
+/** Cria um op com id/horário locais, sem gravar (usado pelos comandos de voz do aparelho). */
+export const newOp = (type, payload, source = 'voice') => makeOp(type, payload, source);
+
+/** Grava ops criados no aparelho (comando de voz interpretado pela Apple Intelligence). */
+export async function addLocalOps(ops) {
+  if (!ops?.length) return;
+  data.ops = mergeOps(data.ops, ops);
+  for (const op of ops) data.pending.add(op.id);
+  await persist();
+  changed();
+  sync();
+}
+
 /** Ops criados pelo servidor durante uma conversa por voz. */
 export async function applyRemoteOps(ops) {
   if (!ops?.length) return;

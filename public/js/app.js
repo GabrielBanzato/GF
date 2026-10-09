@@ -1,9 +1,11 @@
 import { api, setToken } from './api.js';
 import { store } from './store.js';
 import { t, setLanguage, uiLanguage, speechLocale, LANGUAGE_OPTIONS, CURRENCY_OPTIONS } from './i18n.js';
-import { data, loadLocal, setProfile, addLocalOp, applyRemoteOps, sync, startAutoSync, wipeLocal } from './sync.js';
+import { data, loadLocal, setProfile, addLocalOp, addLocalOps, newOp, applyRemoteOps, sync, startAutoSync, wipeLocal } from './sync.js';
 import { saveBackup, exportBackup } from './backup.js';
 import * as voice from './voice.js';
+import * as native from './native.js';
+import { commandInstructions, buildCommandPrompt, applyCommand } from '/shared/commands.js';
 import { OP, summarize, formatMoney, toCents, todayIn } from '/shared/ledger.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -66,14 +68,16 @@ function flashStatus(key) {
 orb.addEventListener('click', () => {
   voice.unlockAudio();
   const state = orb.dataset.state;
-  if (state === 'listening') return voice.stopListening();
-  if (state === 'speaking') { turn++; voice.stopSpeaking(); return setState('idle'); }
-  if (state === 'thinking') return;
+  if (state === 'listening') return native.hasNative() ? native.stopListening() : voice.stopListening();
+  if (state === 'speaking') { turn++; native.hasNative() ? native.stopSpeaking() : voice.stopSpeaking(); return setState('idle'); }
+  if (state === 'thinking') { turn++; setCaption(); return setState('idle'); } // o pedido continua no servidor; o resultado chega pela sincronização
   converse();
 });
 
 async function converse() {
   const myTurn = ++turn;
+  // No app iOS, tudo roda no próprio iPhone (funciona até offline).
+  if (native.hasNative()) return nativeConverse(myTurn);
   if (!navigator.onLine) { setCaption('', t('offlineTalk')); return pulseLedger(); }
   if (!config.ai) { setCaption('', t('aiOff')); return; }
 
@@ -102,7 +106,7 @@ async function converse() {
   setState('thinking');
   let res;
   try {
-    res = await api('POST', '/api/turn', body, { timeoutMs: 60000 });
+    res = await runTurnJob(body, myTurn);
   } catch (err) {
     if (myTurn !== turn) return;
     setState('idle');
@@ -110,7 +114,8 @@ async function converse() {
     if (err.code === 'network') { data.serverDown = true; renderLedger(); setCaption('', t('offlineTalk')); return pulseLedger(); }
     return setCaption('', t(err.code === 'ai_not_configured' ? 'aiOff' : 'genericError'));
   }
-  if (myTurn !== turn) return;
+  if (!res || myTurn !== turn) return;
+  if (res.status === 'error') { setState('idle'); return setCaption(res.transcript, t('genericError')); }
   if (!res.heard) { setState('idle'); return flashStatus('didntHear'); }
 
   setCaption(res.transcript, res.reply);
@@ -123,6 +128,104 @@ async function converse() {
 
   // Se a IA fez uma pergunta, já volta a ouvir para a conversa fluir.
   if (/[?？]\s*$/.test(res.reply)) converse();
+}
+
+// ---------------------------------------------------------------------------
+// IA do próprio iPhone: ouvir (Speech) → entender (Apple Intelligence) → falar
+// ---------------------------------------------------------------------------
+let history = []; // última troca: ajuda em "e ele também me deve 20"
+const SPEECH_LOCALES = { pt: 'pt-BR', en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT' };
+
+function nativeLanguage() {
+  const loc = speechLocale(data.profile?.language);
+  const lang = loc.slice(0, 2);
+  return { loc, lang };
+}
+
+async function nativeConverse(myTurn) {
+  const { loc, lang } = nativeLanguage();
+  setState('listening');
+  setCaption();
+  let text;
+  try {
+    text = await native.listen(loc, (partial) => setCaption(partial));
+  } catch (err) {
+    setState('idle');
+    return flashStatus(['speech_denied', 'mic_denied'].includes(err.code) ? 'micDenied' : 'genericError');
+  }
+  if (myTurn !== turn) return;
+  if (!text) { setState('idle'); return flashStatus('didntHear'); }
+
+  setCaption(text);
+  setState('thinking');
+  const today = todayIn(tz());
+  const currency = data.profile?.currency || 'BRL';
+  let result;
+  try {
+    const cmd = await native.interpret(
+      commandInstructions(config.assistantName),
+      buildCommandPrompt({ text, ops: data.ops, today, currency, history }),
+    );
+    if (myTurn !== turn) return;
+    result = applyCommand(cmd, { ops: data.ops, today, currency, language: lang, makeOp: (type, payload) => newOp(type, payload, 'voice') });
+  } catch (err) {
+    setState('idle');
+    return setCaption(text, t(err.code === 'llm_unavailable' ? 'appleIntelligenceOff' : 'genericError'));
+  }
+
+  await addLocalOps(result.ops); // sincroniza com o servidor sozinho (ou quando a conexão voltar)
+  history = [{ role: 'user', text }, { role: 'assistant', text: result.reply }];
+  setCaption(text, result.reply);
+  setState('speaking');
+  try { await native.speak(result.reply, SPEECH_LOCALES[lang] || loc); } catch { /* sem voz: o texto já está na tela */ }
+  if (myTurn !== turn) return;
+  setState('idle');
+
+  // Se o Midas fez uma pergunta, já volta a ouvir para a conversa fluir.
+  if (result.ask) converse();
+}
+
+/** Avisa logo de cara se o aparelho não tem Apple Intelligence disponível. */
+async function checkNative() {
+  if (!native.hasNative()) return;
+  try {
+    const caps = await native.capabilities(nativeLanguage().loc);
+    if (caps.llm === 'device_not_eligible') setCaption('', t('deviceNotSupported'));
+    else if (caps.llm !== 'available') setCaption('', t('appleIntelligenceOff'));
+    else native.prewarm(commandInstructions(config.assistantName));
+  } catch { /* versão antiga do app sem a ponte completa */ }
+}
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * O servidor processa o comando em segundo plano (com o Qwen em CPU pode levar
+ * minutos). Envia, depois consulta o andamento e vai mostrando cada etapa.
+ */
+async function runTurnJob(body, myTurn) {
+  let res = await api('POST', '/api/turn', body, { timeoutMs: 60000 });
+  let failures = 0;
+  let shownReply = false;
+  while (!['done', 'error'].includes(res.status)) {
+    if (myTurn !== turn) return null;
+    const stage = { queued: res.position ? t('queued', { n: res.position }) : t('thinking'), transcribing: t('transcribing'), thinking: t('thinking'), speaking: t('preparingVoice') }[res.status];
+    if (stage) $('#status').textContent = stage;
+    if (res.transcript && !shownReply) setCaption(res.transcript, '');
+    if (res.reply && !shownReply) {
+      // A resposta em texto e as alterações já chegam antes da voz ficar pronta.
+      shownReply = true;
+      setCaption(res.transcript, res.reply);
+      applyRemoteOps(res.ops);
+    }
+    await wait(1500);
+    try {
+      res = await api('GET', `/api/turn/${res.jobId}`, undefined, { timeoutMs: 20000 });
+      failures = 0;
+    } catch (err) {
+      if (err.code !== 'network' || ++failures > 8) throw err; // tolera instabilidades curtas de rede
+    }
+  }
+  return res;
 }
 
 async function speak(text, audioUrl, language) {
@@ -493,6 +596,8 @@ async function boot() {
   setState('idle');
   renderLedger();
   setInterval(renderLedger, 30000); // atualiza "sincronizado há X min"
+
+  checkNative();
 
   if (!token || !data.profile) {
     let known = Boolean(data.profile);

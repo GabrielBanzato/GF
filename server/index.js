@@ -242,31 +242,78 @@ export function createApp({
   });
 
   // --- Conversa por voz ---------------------------------------------------
-  app.post('/api/turn', auth, async (req, res) => {
-    if (!ai.config().enabled) throw new HttpError(503, 'ai_not_configured');
-    const user = req.user;
-    let text = String(req.body?.text || '').trim().slice(0, 2000);
-    let spokenLanguage = req.body?.language || null;
+  // Com o Qwen rodando em CPU, um comando pode levar mais de 100 s — o limite da
+  // Cloudflare para uma requisição. Por isso o comando vira um "pedido" (job):
+  // POST /api/turn responde na hora com o id e o app consulta GET /api/turn/:id
+  // até ficar pronto, mostrando cada etapa (ouvindo → pensando → falando).
+  // Os pedidos rodam um de cada vez, em fila: o servidor tem poucos núcleos.
+  const jobs = new Map();
+  let queue = Promise.resolve();
+  const JOB_TTL_MS = 15 * 60_000;
 
-    if (!text && req.body?.audio) {
-      const mime = String(req.body.mime || 'audio/webm').split(';')[0];
-      const heard = await ai.transcribe(String(req.body.audio), mime);
-      text = heard.text;
-      spokenLanguage = heard.language || spokenLanguage;
+  const publicJob = (j) => ({
+    jobId: j.id, status: j.status, position: j.status === 'queued' ? [...jobs.values()].filter((o) => o.status === 'queued' && o.createdAt < j.createdAt).length : 0,
+    heard: j.heard, transcript: j.transcript, language: j.language, reply: j.reply, ops: j.ops, cursor: j.cursor, audioUrl: j.audioUrl, error: j.error,
+  });
+
+  async function processTurn(job, { user, body, timeZone }) {
+    try {
+      let text = String(body.text || '').trim().slice(0, 2000);
+      job.language = body.language || null;
+      if (!text && body.audio) {
+        job.status = 'transcribing';
+        const heard = await ai.transcribe(String(body.audio), String(body.mime || 'audio/webm').split(';')[0]);
+        text = heard.text;
+        job.language = heard.language || job.language;
+      }
+      if (!text) {
+        job.heard = false;
+        job.status = 'done';
+        return;
+      }
+      job.transcript = text;
+      job.status = 'thinking';
+      const { reply, ops } = await runTurn(
+        { user, text, timeZone, today: todayIn(timeZone), spokenLanguage: job.language },
+        { chat: ai.chat, insertOps: db.insertOps, getOps: db.allOps, assistantName },
+      );
+      job.reply = reply;
+      job.ops = ops;
+      job.cursor = db.cursor(user.id);
+      if (ops.length) await writeSheet(user, timeZone);
+
+      job.status = 'speaking';
+      try {
+        job.audioUrl = await ai.speak(reply, user.language !== 'auto' ? user.language : job.language);
+      } catch (err) {
+        console.warn('[tts]', err.message); // o app usa a voz do aparelho
+      }
+      job.status = 'done';
+    } catch (err) {
+      console.error('[turn]', err);
+      job.status = 'error';
+      job.error = 'ai_failed';
     }
-    if (!text) return res.json({ transcript: '', reply: '', ops: [], cursor: db.cursor(user.id), heard: false });
+  }
 
-    const today = todayIn(req.timeZone);
-    const { reply, ops } = await runTurn(
-      { user, text, timeZone: req.timeZone, today, spokenLanguage },
-      { chat: ai.chat, insertOps: db.insertOps, getOps: db.allOps, assistantName },
-    );
-    if (ops.length) await writeSheet(user, req.timeZone);
+  app.post('/api/turn', auth, (req, res) => {
+    if (!ai.config().enabled) throw new HttpError(503, 'ai_not_configured');
+    const now = Date.now();
+    for (const [id, j] of jobs) if (now - j.createdAt > JOB_TTL_MS) jobs.delete(id);
+    if ([...jobs.values()].some((j) => j.userId === req.user.id && !['done', 'error'].includes(j.status))) {
+      throw new HttpError(429, 'turn_in_progress');
+    }
+    const job = { id: randomUUID(), userId: req.user.id, createdAt: now, status: 'queued', heard: true, transcript: '', language: null, reply: '', ops: [], cursor: null, audioUrl: null, error: null };
+    jobs.set(job.id, job);
+    const input = { user: req.user, body: req.body || {}, timeZone: req.timeZone };
+    queue = queue.then(() => processTurn(job, input));
+    res.status(202).json(publicJob(job));
+  });
 
-    let audioUrl = null;
-    try { audioUrl = await ai.speak(reply); } catch (err) { console.warn('[tts]', err.message); }
-
-    res.json({ transcript: text, language: spokenLanguage, reply, audioUrl, ops, cursor: db.cursor(user.id), heard: true });
+  app.get('/api/turn/:id', auth, (req, res) => {
+    const job = jobs.get(req.params.id);
+    if (!job || job.userId !== req.user.id) throw new HttpError(404, 'not_found');
+    res.json(publicJob(job));
   });
 
   // --- Planilha -----------------------------------------------------------

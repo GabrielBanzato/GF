@@ -1,5 +1,8 @@
-# Stack do Midas. No Portainer: Stacks → Add stack → Repository (este repo)
-# e preencha as variáveis de ambiente abaixo na tela da stack.
+# Stack do Midas. A IA (ouvir, entender e falar) roda no próprio iPhone com
+# Apple Intelligence; o servidor só guarda contas, sincronização e planilhas.
+#   midas        app + API + dados (SQLite)
+#   cloudflared  túnel da Cloudflare (HTTPS)
+# No Portainer: Stacks → Add stack → Repository (este repo) e preencha as variáveis.
 services:
   midas:
     # A imagem é sempre construída a partir deste repositório (não existe no Docker Hub).
@@ -9,14 +12,6 @@ services:
     restart: unless-stopped
     environment:
       ASSISTANT_NAME: ${ASSISTANT_NAME:-Midas}
-      # Qwen (Alibaba Cloud Model Studio / DashScope)
-      QWEN_API_KEY: ${QWEN_API_KEY:-}
-      QWEN_BASE_URL: ${QWEN_BASE_URL:-https://dashscope-intl.aliyuncs.com/compatible-mode/v1}
-      QWEN_CHAT_MODEL: ${QWEN_CHAT_MODEL:-qwen-plus}
-      QWEN_ASR_MODEL: ${QWEN_ASR_MODEL:-qwen3-asr-flash}
-      QWEN_TTS_MODEL: ${QWEN_TTS_MODEL:-qwen3-tts-flash}
-      QWEN_TTS_URL: ${QWEN_TTS_URL:-https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation}
-      QWEN_VOICE: ${QWEN_VOICE:-Ethan}   # voz masculina do Midas
       # E-mail do "esqueci minha senha" (https://resend.com). Sem isso o código aparece no log do container.
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-Midas <onboarding@resend.dev>}

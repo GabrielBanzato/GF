@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { OP, replay, summarize, mergeOps, findPerson, toCents, createOpFactory, sanitizeOp } from '../shared/ledger.js';
-import { executeTool } from '../server/tools.js';
+import { executeTool } from '../shared/tools.js';
 
 const TODAY = '2026-10-08';
 let n = 0;

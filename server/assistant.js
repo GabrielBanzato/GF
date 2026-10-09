@@ -1,7 +1,7 @@
 // Um "turno" de conversa: texto do usuário -> Qwen (+ ferramentas) -> ops + resposta.
 
 import { summarize, formatMoney, createOpFactory } from '../shared/ledger.js';
-import { TOOLS, executeTool } from './tools.js';
+import { TOOLS, executeTool } from '../shared/tools.js';
 
 const LANGUAGE_NAMES = { pt: 'Portuguese (Brazil)', en: 'English', es: 'Spanish', fr: 'French', de: 'German', it: 'Italian', zh: 'Chinese', ja: 'Japanese', ko: 'Korean' };
 const MAX_TOOL_ROUNDS = 5;
@@ -26,7 +26,33 @@ function pushHistory(userId, ...messages) {
   histories.set(userId, { at: Date.now(), messages: list });
 }
 
-export function buildSystemPrompt({ assistantName, user, today, timeZone, ops, spokenLanguage }) {
+/**
+ * Instruções FIXAS (iguais em todo comando). Ficam no início da conversa para o
+ * Qwen local reaproveitar o cache e não reprocessar tudo a cada pedido — em CPU
+ * isso é a maior parte do tempo de resposta.
+ */
+export function buildSystemPrompt({ assistantName }) {
+  return `You are ${assistantName}, a friendly male voice assistant that keeps a personal ledger of who owes money to the user and whom the user owes.
+In gendered languages use masculine forms for yourself (e.g. "obrigado", "pronto, anotado").
+
+How to act:
+- Each user message starts with a [context] block (today's date, currency, reply language, current ledger). Use it; never read it aloud.
+- The user speaks casually and may call you by name ("fala ${assistantName}", "hey ${assistantName}", "opa") — that is just a greeting, not a person.
+- Every change MUST go through a tool call. Never say something was saved unless the tool returned ok.
+- "X me deve", "coloca o X na lista", "emprestei pro X", "tenho que receber do X" -> add_debt with they_owe_me.
+- "eu devo pro X", "peguei emprestado do X", "I owe X" -> add_debt with i_owe_them.
+- "desconta", "abate", "X me pagou", "recebi do X" -> register_payment (they_owe_me). "paguei o X" -> register_payment (i_owe_them).
+- "tenho que receber até tal dia" -> due_date. Convert relative dates (ontem, amanhã, sexta que vem, dia 10, fim do mês) to YYYY-MM-DD using today's date. A bare day of month that has already passed means next month.
+- Amounts are in the context currency: understand slang like "50 conto", "50 pila", "2k", "mil e quinhentos".
+- Match names to existing people when it is clearly the same person (first name, accents, small transcription errors).
+- If who or how much is missing, ask ONE short question instead of guessing. Do not ask for optional info.
+- For balance questions, answer from the ledger in the context.
+- ALWAYS reply in the reply language given in the context.
+- Your reply is spoken aloud: 1-2 short, natural sentences. No markdown, no lists, no emojis. After a change, confirm it and mention the new balance briefly.`;
+}
+
+/** Dados que mudam a cada comando: vão junto com a fala do usuário, no fim da conversa. */
+export function buildContext({ user, today, timeZone, ops, spokenLanguage }) {
   const { people, totals, state } = summarize(ops, today);
   const money = (c) => formatMoney(c, user.currency);
   const weekday = new Date(`${today}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
@@ -42,36 +68,23 @@ export function buildSystemPrompt({ assistantName, user, today, timeZone, ops, s
 
   const recent = [...state.entries.values()]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 15)
+    .slice(0, 8)
     .map((e) => `- id ${e.id.slice(0, 8)} | ${e.date} | ${state.people.get(e.personKey)?.name} | ${e.kind} ${e.direction === 'in' ? 'they_owe_me' : 'i_owe_them'} | ${money(e.amount)}${e.dueDate ? ` | due ${e.dueDate}` : ''}${e.note ? ` | ${e.note}` : ''}`)
     .join('\n');
 
   const replyLanguage = user.language && user.language !== 'auto'
     ? LANGUAGE_NAMES[user.language] || user.language
-    : `the same language the user just spoke${spokenLanguage ? ` (detected: ${spokenLanguage})` : ''}`;
+    : spokenLanguage
+      ? LANGUAGE_NAMES[spokenLanguage] || spokenLanguage
+      : 'the same language the user is speaking';
 
-  return `You are ${assistantName}, a friendly voice assistant that keeps a personal ledger of who owes money to ${user.name || 'the user'} and whom ${user.name || 'the user'} owes.
-Today is ${weekday}, ${today} (time zone ${timeZone}). Currency: ${user.currency}.
-Always reply in ${replyLanguage}. You are male: in gendered languages use masculine forms for yourself (e.g. "obrigado", "pronto, anotado").
-
-How to act:
-- The user speaks casually and may call you by name ("fala ${assistantName}", "hey ${assistantName}", "opa") — that is just a greeting, not a person.
-- Every change MUST go through a tool call. Never say something was saved unless the tool returned ok.
-- "X me deve", "coloca o X na lista", "emprestei pro X", "tenho que receber do X" -> add_debt with they_owe_me.
-- "eu devo pro X", "peguei emprestado do X" -> add_debt with i_owe_them.
-- "desconta", "abate", "X me pagou", "recebi do X" -> register_payment (they_owe_me). "paguei o X" -> register_payment (i_owe_them).
-- "tenho que receber até tal dia" -> due_date. Convert relative dates (ontem, amanhã, sexta que vem, dia 10, fim do mês) to YYYY-MM-DD using today's date. A bare day of month that has already passed means next month.
-- Amounts in ${user.currency} units: understand slang like "50 conto", "50 pila", "2k", "mil e quinhentos".
-- Match names to existing people when it is clearly the same person (first name, accents, small transcription errors).
-- If who or how much is missing, ask ONE short question instead of guessing. Do not ask for optional info.
-- For balance questions, answer from the ledger below.
-- Your reply is spoken aloud: 1-2 short, natural sentences. No markdown, no lists, no emojis. After a change, confirm it and mention the new balance briefly.
-
-Current ledger (totals: to receive ${money(totals.receivable)}, to pay ${money(totals.payable)}):
+  return `[context]
+User: ${user.name || 'unknown'}. Today: ${weekday}, ${today} (time zone ${timeZone}). Currency: ${user.currency}. Reply language: ${replyLanguage}.
+Ledger (to receive ${money(totals.receivable)}, to pay ${money(totals.payable)}):
 ${ledger}
-
-Most recent entries:
-${recent || '(none)'}`;
+Recent entries:
+${recent || '(none)'}
+[/context]`;
 }
 
 /**
@@ -84,14 +97,16 @@ export async function runTurn({ user, text, timeZone, today, spokenLanguage }, d
   const created = [];
 
   const messages = [
-    { role: 'system', content: buildSystemPrompt({ assistantName: deps.assistantName, user, today, timeZone, ops, spokenLanguage }) },
+    { role: 'system', content: buildSystemPrompt({ assistantName: deps.assistantName }) },
     ...getHistory(user.id),
-    { role: 'user', content: text },
+    { role: 'user', content: `${buildContext({ user, today, timeZone, ops, spokenLanguage })}\n\n${text}` },
   ];
 
   let reply = '';
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const msg = await deps.chat(messages, round < MAX_TOOL_ROUNDS ? TOOLS : undefined);
+    // As ferramentas vão sempre (mudar a lista quebraria o cache do prompt); na última rodada só ignoramos novas chamadas.
+    const msg = await deps.chat(messages, TOOLS);
+    if (round === MAX_TOOL_ROUNDS) msg.tool_calls = [];
     messages.push({ role: 'assistant', content: msg.content || '', ...(msg.tool_calls?.length ? { tool_calls: msg.tool_calls } : {}) });
     if (!msg.tool_calls?.length) {
       reply = msg.content || '';
