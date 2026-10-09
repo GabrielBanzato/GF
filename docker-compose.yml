@@ -25,17 +25,17 @@ services:
     ports:
       - "${MIDAS_PORT:-3210}:3000"
 
-  # Cloudflare Tunnel opcional (se ainda não tiver um rodando no servidor).
-  # Descomente, crie o túnel em Zero Trust → Networks → Tunnels, cole o token em
-  # CLOUDFLARE_TUNNEL_TOKEN e aponte o Public Hostname para http://midas:3000
-  # cloudflared:
-  #   image: cloudflare/cloudflared:latest
-  #   restart: unless-stopped
-  #   command: tunnel --no-autoupdate run
-  #   environment:
-  #     TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
-  #   depends_on:
-  #     - midas
+  # Cloudflare Tunnel: crie o túnel em Zero Trust → Networks → Tunnels, cole o
+  # token em CLOUDFLARE_TUNNEL_TOKEN e aponte o Public Hostname para HTTP midas:3000
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: midas-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Defina CLOUDFLARE_TUNNEL_TOKEN nas variáveis da stack}
+    depends_on:
+      - midas
 
 volumes:
   midas-data:
